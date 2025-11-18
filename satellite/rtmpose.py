@@ -5,6 +5,15 @@ import_from = [
     'satellite.tensor_augmentor'
 ]
 
+from mmengine.config import Config
+cfg = Config.fromfile('satellite/custom_imports.py')
+from mmpose.registry import TRANSFORMS
+aug = TRANSFORMS.build(cfg.transforms)
+print(aug)
+
+
+# custom_imports = dict(imports=['my_module'], allow_failed_imports=False)
+
 # common setting
 num_keypoints = 11
 input_size = (224, 224)
@@ -75,7 +84,7 @@ model = dict(
                 prob_randconv=0.5,
                 
                 # DeepAugment(CAE) 설정
-                cae_weights_path='YOUR/PATH/TO/model_final.state', #
+                cae_weights_path='CAE_Weight/model_final.state', #
                 deepaug_sigma=0.1, # 논문[25]에서 사용한 노이즈 강도
                 
                 # RandConv 설정
@@ -155,6 +164,7 @@ train_dataloader = dict(
         ann_file='annotations/train.json',
         data_prefix=dict(img='train/'),
         pipeline=train_pipeline,
+        metainfo=dict(from_file='configs/_base_/datasets/custom.py'),
     ))
 val_dataloader = dict(
     batch_size=val_batch_size,
@@ -172,6 +182,7 @@ val_dataloader = dict(
         data_prefix=dict(img='val/'),
         test_mode=True,
         pipeline=val_pipeline,
+        metainfo=dict(from_file='configs/_base_/datasets/custom.py'),
     ))
 test_dataloader = val_dataloader
 

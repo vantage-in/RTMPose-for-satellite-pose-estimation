@@ -24,8 +24,6 @@ class SPNAugmentation:
     선행 연구의 RandAugment 유사 증강(Table 1)을 적용합니다.
     - N개의 연산을 무작위로 선택하여 순차 적용합니다.
     - RandomSunFlare는 'bbox' 키를 사용하여 GT BBox 내부에만 적용됩니다.
-    
-    ⚠️ 이 트랜스폼은 'TopdownAffine' *이전*에 위치해야 합니다.
     """
     def __init__(self, n: int = 2, p: float = 1.0):
         self.n = n
@@ -65,6 +63,8 @@ class SPNAugmentation:
         RandomSunFlare를 이미지의 BBox 영역에만 적용합니다.
         """
         try:
+            if bbox.ndim > 1:
+                bbox = bbox[0]
             # BBox 좌표를 정수형으로 변환하고 이미지 경계 내로 클리핑
             x1, y1, x2, y2 = bbox.astype(int)
             h, w = img.shape[:2]
