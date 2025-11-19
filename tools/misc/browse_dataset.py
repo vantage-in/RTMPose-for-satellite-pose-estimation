@@ -4,6 +4,9 @@ import os
 import os.path as osp
 from itertools import accumulate
 
+import matplotlib
+matplotlib.use('Agg')
+
 import mmcv
 import mmengine
 import mmengine.fileio as fileio
@@ -21,10 +24,10 @@ def parse_args():
     parser.add_argument('config', help='train config file path')
     parser.add_argument(
         '--output-dir',
-        default=None,
+        default='vis_results',
         type=str,
         help='If there is no display interface, you can save it.')
-    parser.add_argument('--not-show', default=False, action='store_true')
+    parser.add_argument('--not-show', default=True, action='store_true')
     parser.add_argument(
         '--max-item-per-dataset',
         default=50,
@@ -40,7 +43,7 @@ def parse_args():
     parser.add_argument(
         '--show-interval',
         type=float,
-        default=2,
+        default=0,
         help='the interval of show (s)')
     parser.add_argument(
         '--mode',
@@ -184,7 +187,7 @@ def main():
             draw_pred=False,
             draw_bbox=(args.mode == 'original'),
             draw_heatmap=True,
-            show=not args.not_show,
+            show=False, #not args.not_show,
             wait_time=args.show_interval,
             out_file=out_file)
 

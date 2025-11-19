@@ -101,7 +101,7 @@ dataset_info = dict(
         11:
         dict(link=('ankle4', 'ankle1'), id=11, color=[255, 128, 0]),
         12:
-        dict(link=('shoulder1', 'line1'), id=12, color=[51, 153, 255]),
+        dict(link=('shoulder2', 'line1'), id=12, color=[51, 153, 255]),
         13:
         dict(link=('shoulder3', 'line2'), id=13, color=[51, 153, 255]),
         14:

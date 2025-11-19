@@ -9,6 +9,8 @@ from mmengine.config import Config
 cfg = Config.fromfile('satellite/custom_imports.py')
 from mmpose.registry import TRANSFORMS
 aug = TRANSFORMS.build(cfg.transforms)
+from mmpose.registry import MODELS
+mod = MODELS.build(cfg.model)
 print(aug)
 
 
@@ -84,7 +86,7 @@ model = dict(
                 prob_randconv=0.5,
                 
                 # DeepAugment(CAE) 설정
-                cae_weights_path='CAE_Weight/model_final.state', #
+                cae_weights_path='/root/RTMPose/satellite/CAE_Weight/model_final.state', #
                 deepaug_sigma=0.1, # 논문[25]에서 사용한 노이즈 강도
                 
                 # RandConv 설정
