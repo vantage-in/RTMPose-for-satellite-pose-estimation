@@ -25,7 +25,7 @@ class SPNAugmentation:
     - N개의 연산을 무작위로 선택하여 순차 적용합니다.
     - RandomSunFlare는 'bbox' 키를 사용하여 GT BBox 내부에만 적용됩니다.
     """
-    def __init__(self, n: int = 2, p: float = 1.0):
+    def __init__(self, n: int = 2, p: float = 0.9):
         self.n = n
         self.p = p
         
@@ -60,30 +60,49 @@ class SPNAugmentation:
 
     def _apply_flare_to_bbox(self, img: np.ndarray, bbox: np.ndarray) -> np.ndarray:
         """
-        RandomSunFlare를 이미지의 BBox 영역에만 적용합니다.
+        RandomSunFlare를 이미지의 BBox 중앙 50% 영역에만 적용합니다.
+        (상하좌우에서 각각 25%씩 안쪽으로 들어간 영역)
         """
         try:
             if bbox.ndim > 1:
                 bbox = bbox[0]
-            # BBox 좌표를 정수형으로 변환하고 이미지 경계 내로 클리핑
-            x1, y1, x2, y2 = bbox.astype(int)
-            h, w = img.shape[:2]
-            x1, y1 = max(0, x1), max(0, y1)
-            x2, y2 = min(w, x2), min(h, y2)
+            
+            # 1. 원본 BBox 좌표 확보
+            x1, y1, x2, y2 = bbox.astype(float) # 계산을 위해 float 변환
+            
+            # 2. BBox의 너비와 높이 계산
+            w_box = x2 - x1
+            h_box = y2 - y1
+            
+            # 3. 중앙 50% 영역 계산
+            # 전체 길이의 25%씩 양쪽에서 줄이면 가운데 50%가 남습니다.
+            margin_w = w_box * 0.25
+            margin_h = h_box * 0.25
+            
+            new_x1 = int(x1 + margin_w)
+            new_y1 = int(y1 + margin_h)
+            new_x2 = int(x2 - margin_w)
+            new_y2 = int(y2 - margin_h)
+            
+            # 4. 이미지 경계 내로 클리핑 (안전장치)
+            h_img, w_img = img.shape[:2]
+            new_x1, new_y1 = max(0, new_x1), max(0, new_y1)
+            new_x2, new_y2 = min(w_img, new_x2), min(h_img, new_y2)
 
-            if x1 >= x2 or y1 >= y2:
-                # 유효하지 않은 BBox
+            # 5. 유효성 검사 (영역이 너무 작아져서 0이 된 경우 등)
+            if new_x1 >= new_x2 or new_y1 >= new_y2:
                 return img
 
-            # BBox 영역을 자릅니다.
-            bbox_crop = img[y1:y2, x1:x2]
+            # 6. 중앙 영역 자르기 (Crop)
+            bbox_crop = img[new_y1:new_y2, new_x1:new_x2]
             
-            # 자른 영역에만 SunFlare 증강을 적용합니다.
+            # 7. 자른 영역에만 SunFlare 증강 적용
+            # (영역이 작으므로 src_radius 등 파라미터가 민감할 수 있어 기본값 사용 권장)
             augmented_crop = self.flare_transform(image=bbox_crop)['image']
             
-            # 원본 이미지를 복사하여 증강된 BBox 영역을 붙여넣습니다.
+            # 8. 원본 이미지에 붙여넣기
             img_copy = img.copy()
-            img_copy[y1:y2, x1:x2] = augmented_crop
+            img_copy[new_y1:new_y2, new_x1:new_x2] = augmented_crop
             return img_copy
 
         except Exception as e:

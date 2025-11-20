@@ -1,17 +1,24 @@
 _base_ = ['mmpose::_base_/default_runtime.py']
 
-import_from = [
-    'satellite.cpu_augmentor',
-    'satellite.tensor_augmentor'
-]
+# import_from = [
+#     'satellite.cpu_augmentor',
+#     'satellite.tensor_augmentor'
+# ]
 
-from mmengine.config import Config
-cfg = Config.fromfile('satellite/custom_imports.py')
-from mmpose.registry import TRANSFORMS
-aug = TRANSFORMS.build(cfg.transforms)
-from mmpose.registry import MODELS
-mod = MODELS.build(cfg.model)
-print(aug)
+custom_imports = dict(
+    imports=['cpu_augmentor', 'tensor_augmentor', 'bbox'], # 리스트 안에 쉼표로 구분하여 나열
+    allow_failed_imports=False
+)
+transforms = dict(type='SPNAugmentation', n=2, p=0.8)
+model = dict(type='CombinedAugmentation')
+transforms2 = dict(type='SetFullImageBBox')
+
+# from mmengine.config import Config
+# cfg = Config.fromfile('satellite/custom_imports.py')
+# from mmpose.registry import TRANSFORMS
+# aug = TRANSFORMS.build(cfg.transforms)
+# from mmpose.registry import MODELS
+# mod = MODELS.build(cfg.model)
 
 
 # custom_imports = dict(imports=['my_module'], allow_failed_imports=False)
@@ -26,7 +33,7 @@ base_lr = 1e-3
 train_batch_size = 32
 val_batch_size = 32
 
-train_cfg = dict(max_epochs=max_epochs, val_interval=30)
+train_cfg = dict(max_epochs=max_epochs)#, val_interval=5)
 randomness = dict(seed=42)
 
 # optimizer
@@ -41,10 +48,11 @@ optim_wrapper = dict(
 param_scheduler = [
     dict(
         type='LinearLR',
-        start_factor=1.0e-5,
+        start_factor=1.0e-3,
         by_epoch=True, 
         begin=0,
-        end=1),
+        end=1,
+        convert_to_iter_based=True),
     dict(
         type='CosineAnnealingLR', # 절반부터 시작
         eta_min=base_lr * 0.05,
@@ -137,19 +145,25 @@ model = dict(
 # base dataset settings
 dataset_type = 'CocoDataset'
 data_mode = 'topdown'
-data_root = '/workspace/speedplusv2'
+data_root = '/workspace/speedplusv2/'
 
 backend_args = dict(backend='local')
 
 # pipelines
 train_pipeline = [
     dict(type='LoadImage', backend_args=backend_args),
+    dict(type='SetFullImageBBox'),
+    dict(type='GetBBoxCenterScale'),
     dict(type='SPNAugmentation', n=2, p=0.8), # n=논문에서 사용한 N값, p=적용 확률
+    dict(type='TopdownAffine', input_size=input_size),
     dict(type='GenerateTarget', encoder=codec), # label 변환
     dict(type='PackPoseInputs')
 ]
 val_pipeline = [
     dict(type='LoadImage', backend_args=backend_args),
+    dict(type='SetFullImageBBox'),
+    dict(type='GetBBoxCenterScale'),
+    dict(type='TopdownAffine', input_size=input_size),
     dict(type='PackPoseInputs')
 ]
 

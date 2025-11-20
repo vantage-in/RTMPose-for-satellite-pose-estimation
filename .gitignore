@@ -115,7 +115,6 @@ mmpose/.mim
 *.pkl.json
 *.log.json
 *.npy
-work_dirs/
 docs/**/topics/
 docs/**/papers/*.md
 docs/**/datasets.md
@@ -129,6 +128,6 @@ docs/**/modelzoo.md
 !tests/data/**/vis/
 
 # Pytorch
-*.pth
+# *.pth
 
 *.DS_Store
