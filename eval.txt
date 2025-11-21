@@ -1,0 +1,4 @@
+=== Evaluation Results ===
+Total Images Evaluated: 11994
+Mean Translation Error: 21.083731 m
+Mean Rotation Error:    52.716727 deg
